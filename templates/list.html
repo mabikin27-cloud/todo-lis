@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}やること一覧 - Todoリスト{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>やること一覧</h1>
+
+  <p>登録したやることを一覧で確認できます。編集・削除は各行のボタンから行えます。</p>
+
+  {% if tasks %}
+  <table>
+    <thead>
+      <tr>
+        <th>タイトル</th>
+        <th>内容</th>
+        <th>期日</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr>
+        <td>{{ task.title }}</td>
+        <td>{{ task.content }}</td>
+        <td>{{ task.due_date or "—" }}</td>
+        <td>
+          <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-secondary btn-small">編集</a>
+          <form action="{{ url_for('delete_task', task_id=task.id) }}" method="post" style="display:inline;" onsubmit="return confirm('このやることを削除しますか？');">
+            <button type="submit" class="btn btn-danger btn-small">削除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>まだやることは登録されていません。<a href="{{ url_for('add_task') }}">新規登録</a>から追加してください。</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+# Render 用の設定（Blueprint）
+# このリポジトリを Render に接続すると、このファイルが読み込まれます。
+# 環境変数は Render ダッシュボードの「Environment」で設定してください。
+
+services:
+  - type: web
+    runtime: python
+    name: todo-list
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT app:app

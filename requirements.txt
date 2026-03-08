@@ -1,0 +1,8 @@
+# TodoリストWebアプリ用のパッケージ一覧
+# インストール: pip install -r requirements.txt
+
+Flask==3.0.0          # Webアプリの土台（ルート・ページ表示を担当）
+gspread==6.0.0        # Googleスプレッドシートを操作するライブラリ
+google-auth==2.25.2   # Google認証（スプレッドシートに接続するために必要）
+python-dotenv==1.0.0  # .env ファイルから環境変数を読み込む
+gunicorn==21.2.0      # 本番サーバー用WSGIサーバー
