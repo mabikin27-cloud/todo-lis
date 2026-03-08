@@ -24,8 +24,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive",
 ]
 
-# 1行目はヘッダー（タイトル・内容・期日）
-HEADER_ROW = ["タイトル", "内容", "期日", "作成日時"]
+# 1行目はヘッダー（タイトル・内容・期日・優先度・状態・作成日時）
+HEADER_ROW = ["タイトル", "内容", "期日", "優先度", "状態", "作成日時"]
 
 
 def _get_client():
@@ -91,13 +91,13 @@ def _ensure_header(sheet):
     """
     row1 = sheet.row_values(1)
     if row1 != HEADER_ROW:
-        sheet.update("A1:D1", [HEADER_ROW])
+        sheet.update("A1:F1", [HEADER_ROW])
 
 
 def get_all_tasks():
     """
     ［解説］スプレッドシートから「やること」をすべて取得し、リストで返します。
-    各要素は id（行番号）, タイトル, 内容, 期日 を持つ辞書です。
+    各要素は id, タイトル, 内容, 期日, 優先度, 状態 を持つ辞書です。
     """
     sheet = _get_sheet()
     _ensure_header(sheet)
@@ -109,6 +109,8 @@ def get_all_tasks():
             "title": row.get("タイトル", ""),
             "content": row.get("内容", ""),
             "due_date": row.get("期日", ""),
+            "priority": row.get("優先度", "中"),
+            "status": row.get("状態", "未完了"),
         })
     return result
 
@@ -122,36 +124,65 @@ def get_task(row_id):
     row = sheet.row_values(int(row_id))
     if len(row) < 3:
         return None
+    # 古いデータは4列（タイトル・内容・期日・作成日時）のため、優先度・状態はデフォルト
     return {
         "id": int(row_id),
         "title": row[0] if len(row) > 0 else "",
         "content": row[1] if len(row) > 1 else "",
         "due_date": row[2] if len(row) > 2 else "",
+        "priority": row[3] if len(row) > 3 and row[3] in ("高", "中", "低") else "中",
+        "status": row[4] if len(row) > 4 and row[4] in ("未完了", "完了") else "未完了",
     }
 
 
-def add_task(title, content, due_date):
+def add_task(title, content, due_date, priority="中", status="未完了"):
     """
     ［解説］新しい「やること」を1行追加します。
     """
     sheet = _get_sheet()
     _ensure_header(sheet)
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    row = [str(title).strip(), str(content).strip(), str(due_date).strip(), now]
+    row = [
+        str(title).strip(),
+        str(content).strip(),
+        str(due_date).strip(),
+        priority if priority in ("高", "中", "低") else "中",
+        status if status in ("未完了", "完了") else "未完了",
+        now,
+    ]
     sheet.append_row(row, value_input_option="USER_ENTERED")
-    # 追加した行番号は「現在の行数」
     return sheet.row_count
 
 
-def update_task(row_id, title, content, due_date):
+def update_task(row_id, title, content, due_date, priority="中", status=None):
     """
     ［解説］指定した行の「やること」を更新します。
+    status が None の場合は既存の値を維持するため、get_task で取得した値を渡してください。
     """
     sheet = _get_sheet()
     _ensure_header(sheet)
     row_idx = int(row_id)
-    row = [str(title).strip(), str(content).strip(), str(due_date).strip()]
-    sheet.update(f"A{row_idx}:C{row_idx}", [row], value_input_option="USER_ENTERED")
+    if status is None:
+        current = get_task(row_id)
+        status = current["status"] if current else "未完了"
+    row = [
+        str(title).strip(),
+        str(content).strip(),
+        str(due_date).strip(),
+        priority if priority in ("高", "中", "低") else "中",
+        status if status in ("未完了", "完了") else "未完了",
+    ]
+    sheet.update(f"A{row_idx}:E{row_idx}", [row], value_input_option="USER_ENTERED")
+
+
+def update_status(row_id, status):
+    """
+    ［解説］指定した行の「状態」のみを更新します（完了⇔未完了の切り替え用）。
+    """
+    sheet = _get_sheet()
+    row_idx = int(row_id)
+    val = "完了" if status == "完了" else "未完了"
+    sheet.update(f"E{row_idx}:E{row_idx}", [[val]], value_input_option="USER_ENTERED")
 
 
 def delete_task(row_id):

@@ -11,18 +11,31 @@
   <table>
     <thead>
       <tr>
+        <th>状態</th>
         <th>タイトル</th>
         <th>内容</th>
         <th>期日</th>
+        <th>優先度</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for task in tasks %}
-      <tr>
+      <tr class="{{ 'task-done' if task.status == '完了' else '' }}">
+        <td>
+          <form action="{{ url_for('toggle_status', task_id=task.id) }}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-check" title="{{ '未完了に戻す' if task.status == '完了' else '完了にする' }}">
+              {% if task.status == '完了' %}✓{% else %}○{% endif %}
+            </button>
+          </form>
+          <span class="status-label">{{ task.status }}</span>
+        </td>
         <td>{{ task.title }}</td>
         <td>{{ task.content }}</td>
         <td>{{ task.due_date or "—" }}</td>
+        <td>
+          <span class="priority-badge priority-{{ task.priority or '中' }}">{{ task.priority or "中" }}</span>
+        </td>
         <td>
           <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-secondary btn-small">編集</a>
           <form action="{{ url_for('delete_task', task_id=task.id) }}" method="post" style="display:inline;" onsubmit="return confirm('このやることを削除しますか？');">

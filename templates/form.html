@@ -18,6 +18,14 @@
       <label for="due_date">期日</label>
       <input type="date" id="due_date" name="due_date" value="{{ task.due_date if task and task.due_date else '' }}">
     </div>
+    <div class="form-group">
+      <label for="priority">優先度</label>
+      <select id="priority" name="priority">
+        <option value="高" {{ 'selected' if task and task.priority == '高' else '' }}>高</option>
+        <option value="中" {{ 'selected' if not task or task.priority == '中' else '' }}>中</option>
+        <option value="低" {{ 'selected' if task and task.priority == '低' else '' }}>低</option>
+      </select>
+    </div>
     <button type="submit" class="btn btn-primary">保存</button>
     <a href="{{ url_for('list_tasks') }}" class="btn btn-secondary">一覧に戻る</a>
   </form>
